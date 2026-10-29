@@ -1,0 +1,17 @@
+node_modules
+web/node_modules
+web/dist
+data
+.git
+.gitignore
+reference
+assets/screenshots
+.npm-cache
+*.log
+.env
+.env.*
+docs
+notes
+launch
+server/test
+.github

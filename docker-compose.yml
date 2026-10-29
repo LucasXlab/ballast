@@ -1,0 +1,19 @@
+services:
+  ballast:
+    build: .
+    image: ballast:0.1.0
+    container_name: ballast
+    ports:
+      - "127.0.0.1:8787:8787"
+    environment:
+      BALLAST_HOST: 0.0.0.0
+      BALLAST_DOCKER: "1"
+      BALLAST_DATA_DIR: /data
+      BALLAST_DEMO: "0"
+      BALLAST_BACKUP_KEEP: "7"
+    volumes:
+      - ballast-data:/data
+    restart: unless-stopped
+
+volumes:
+  ballast-data:
