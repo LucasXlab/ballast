@@ -1,0 +1,33 @@
+{
+  "name": "ballast",
+  "version": "0.1.0",
+  "description": "Local-first contribution rebalancing planner",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "ballast": "server/src/index.js"
+  },
+  "workspaces": [
+    "web"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server/src/index.js",
+    "dev": "node --watch --disable-warning=ExperimentalWarning server/src/index.js",
+    "build": "npm run build --workspace web",
+    "test": "node --disable-warning=ExperimentalWarning --test --test-concurrency=1 server/test/*.test.js",
+    "test:repeat": "node scripts/test-repeat.js",
+    "check:design": "node scripts/check-design.js",
+    "check:offline": "node scripts/check-offline.js",
+    "check": "npm run check:design && npm run check:offline",
+    "screenshots": "node scripts/screenshots.js"
+  },
+  "dependencies": {
+    "express": "5.3.0"
+  },
+  "devDependencies": {
+    "playwright-core": "1.64.1"
+  }
+}

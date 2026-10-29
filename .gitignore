@@ -1,0 +1,13 @@
+node_modules/
+.npm-cache/
+data/
+web/dist/
+*.log
+.DS_Store
+.env
+reference/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+.env.*
+!/.env.example
