@@ -3,6 +3,36 @@ import { api } from '../api.js';
 import { Alert, Button, DetailList, Dialog, Empty, Field, Input, Select, Spinner, Tag, useToast } from '../components.jsx';
 import { formatMoney, formatPercent, formatPrice, microsInput, parseMicros, todayFrom } from '../format.js';
 
+function previewCsv(text) {
+  const lines = String(text ?? '').replace(/^\ufeff/, '').split(/\r?\n/).filter((line) => line.trim() !== '');
+  const parse = (line) => {
+    const fields = [];
+    let i = 0;
+    while (i <= line.length) {
+      if (line[i] === '"') {
+        i += 1;
+        let value = '';
+        while (i < line.length) {
+          if (line[i] === '"' && line[i + 1] === '"') { value += '"'; i += 2; continue; }
+          if (line[i] === '"') { i += 1; break; }
+          value += line[i]; i += 1;
+        }
+        fields.push(value);
+        if (i >= line.length) break;
+        if (line[i] === ',') i += 1;
+      } else {
+        let value = '';
+        while (i < line.length && line[i] !== ',') { value += line[i]; i += 1; }
+        fields.push(value.trim());
+        if (i >= line.length) break;
+        if (line[i] === ',') i += 1;
+      }
+    }
+    return fields;
+  };
+  return lines.slice(0, 6).map(parse);
+}
+
 export default function Holdings({ state, refresh, navigate }) {
   const [dialog, setDialog] = useState(null);
   const [error, setError] = useState('');
@@ -169,7 +199,27 @@ export default function Holdings({ state, refresh, navigate }) {
         <Dialog title="导入交易 CSV" confirmText="导入" busy={busy} onClose={() => setDialog(null)} onConfirm={() => run(async () => api('/api/imports', { method: 'POST', body: { filename: csv.filename || 'transactions.csv', csv: csv.text } }))}>
           <Field label="选择文件" id="csv-file"><input id="csv-file" className="input" type="file" accept=".csv,text/csv" onChange={async (e) => { const file = e.target.files?.[0]; if (file) setCsv({ filename: file.name, text: await file.text() }); }} /></Field>
           <Field label="或粘贴 CSV" id="csv-text" hint="列：date,account,symbol,side,quantity,price,fee,note"><textarea id="csv-text" className="input textarea" rows={8} value={csv.text} onChange={(e) => setCsv({ ...csv, text: e.target.value })} /></Field>
-          <p className="caption"><button className="link" onClick={() => { window.location.href = '/api/imports/template'; }}>下载模板</button></p>
+          <p className="caption"><button className="link" onClick={() => { window.location.href = '/api/imports/template'; }}>下载模板</button> · 账户和代码必须先在系统里存在</p>
+          {csv.text.trim() && (() => {
+            const rows = previewCsv(csv.text);
+            if (rows.length === 0) return null;
+            return (
+              <div className="preview">
+                <p className="caption">前 {Math.max(0, rows.length - 1)} 行预览（最多 5 行数据）</p>
+                <table className="table table--preview">
+                  <caption className="sr-only">CSV 预览</caption>
+                  <tbody>
+                    {rows.map((row, index) => (
+                      <tr key={index} className={index === 0 ? 'table__total' : ''}>
+                        {row.map((cell, cellIndex) => <td key={cellIndex}>{cell.length > 24 ? `${cell.slice(0, 24)}…` : cell}</td>)}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {csv.text.split(/\r?\n/).filter((l) => l.trim()).length > 6 && <p className="caption">只显示前 5 行数据，导入时会处理整个文件。</p>}
+              </div>
+            );
+          })()}
           {error && <Alert tone="danger">{error}</Alert>}
           {errorDetails.length > 0 && <DetailList details={errorDetails} />}
         </Dialog>

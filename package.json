@@ -22,7 +22,8 @@
     "check:design": "node scripts/check-design.js",
     "check:offline": "node scripts/check-offline.js",
     "check": "npm run check:design && npm run check:offline",
-    "screenshots": "node scripts/screenshots.js"
+    "screenshots": "node scripts/screenshots.js",
+    "e2e": "node scripts/e2e.js"
   },
   "dependencies": {
     "express": "5.3.0"
