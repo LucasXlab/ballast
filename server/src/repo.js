@@ -19,7 +19,7 @@ export function getSymbols(db) {
     .all();
 }
 
-export function getTransactions(db, { accountId = null, symbolId = null } = {}) {
+export function getTransactions(db, { accountId = null, symbolId = null, planId = null } = {}) {
   const where = [];
   const params = [];
   if (accountId) {
@@ -29,6 +29,10 @@ export function getTransactions(db, { accountId = null, symbolId = null } = {}) 
   if (symbolId) {
     where.push('t.symbol_id = ?');
     params.push(symbolId);
+  }
+  if (planId) {
+    where.push('t.plan_id = ?');
+    params.push(planId);
   }
   const sql = `SELECT t.*, a.name AS account_name, s.ticker, s.name AS symbol_name
     FROM "transaction" t JOIN account a ON a.id = t.account_id JOIN symbol s ON s.id = t.symbol_id

@@ -7,7 +7,7 @@
 <p align="center">
   <img src="assets/badges/node.svg" alt="Node.js >=22.13">
   <img src="assets/badges/license.svg" alt="License MIT">
-  <img src="assets/badges/tests.svg" alt="35 tests passing">
+  <img src="assets/badges/tests.svg" alt="36 tests passing">
 </p>
 
 <p align="center"><a href="README_EN.md">English</a> · 中文</p>

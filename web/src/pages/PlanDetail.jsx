@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { Alert, Bar, Button, Dialog, Field, Input, Select, Spinner, Tag, useToast } from '../components.jsx';
 import { formatMoney, formatPercent, todayFrom } from '../format.js';
@@ -11,7 +11,15 @@ export default function PlanDetail({ id, state, plan, reloadPlan, refresh, navig
   const [abandonConfirm, setAbandonConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [transactions, setTransactions] = useState(null);
+  const [regenBusy, setRegenBusy] = useState(false);
   const toast = useToast();
+  useEffect(() => {
+    if (plan?.status !== 'executed') return;
+    let alive = true;
+    api(`/api/transactions?planId=${id}&limit=200`).then((data) => { if (alive) setTransactions(data.items); }).catch(() => { if (alive) setTransactions([]); });
+    return () => { alive = false; };
+  }, [id, plan?.status]);
   if (!plan) return <Spinner />;
   const currency = state?.portfolio?.baseCurrency ?? 'CNY';
   const accountOptions = (state?.accounts ?? []).filter((a) => !a.archived).map((a) => ({ value: a.id, label: a.name }));
@@ -25,6 +33,13 @@ export default function PlanDetail({ id, state, plan, reloadPlan, refresh, navig
       toast('计划已执行，持仓已更新');
     } catch (err) { setError(err.message); }
     finally { setBusy(false); }
+  }
+  async function regenerate() {
+    setRegenBusy(true); setError('');
+    try {
+      const next = await api('/api/plans', { method: 'POST', body: { amountMicros: plan.amountMicros, minTradeMicros: plan.minTradeMicros } });
+      navigate(`/plans/${next.id}`);
+    } catch (err) { setError(err.message); } finally { setRegenBusy(false); }
   }
   async function abandon() {
     setBusy(true);
@@ -50,6 +65,9 @@ export default function PlanDetail({ id, state, plan, reloadPlan, refresh, navig
         <div><p className="caption">执行后最大偏离</p><p className="metric">{formatPercent(plan.maxDriftAfterBp)}</p></div>
       </section>
 
+      {plan.status === 'draft' && plan.stale && (
+        <Alert tone="danger">价格、持仓或目标在生成后发生了变化，这份计划已经过期。重新生成后再执行。<button className="link" onClick={regenerate} disabled={regenBusy}>{regenBusy ? '生成中…' : '重新生成'}</button></Alert>
+      )}
       {plan.warnings.map((w) => <Alert key={w.code}>{w.message}</Alert>)}
       {error && <Alert tone="danger">{error}</Alert>}
 
@@ -100,7 +118,23 @@ export default function PlanDetail({ id, state, plan, reloadPlan, refresh, navig
           <p className="caption">执行会生成 {plan.items.length} 条买入记录，不能撤销。</p>
         </section>
       )}
-      {plan.status === 'executed' && <Alert tone="success">执行于 {plan.executedAt?.slice(0, 16).replace('T', ' ')}（UTC）{plan.accountId ? `，账户「${state.accounts.find((a) => a.id === plan.accountId)?.name ?? '已删除账户'}」` : ''}。交易记录可在持仓页查看。</Alert>}
+      {plan.status === 'executed' && (
+        <section className="section">
+          <h2 className="section__title">生成的交易</h2>
+          <p className="caption">执行于 {plan.executedAt?.slice(0, 16).replace('T', ' ')}（UTC）{plan.accountId ? `，账户「${state.accounts.find((a) => a.id === plan.accountId)?.name ?? '已删除账户'}」` : ''}。</p>
+          {transactions === null ? <Spinner /> : transactions.length === 0 ? <p className="muted">没有找到关联交易。</p> : (
+            <table className="table">
+              <caption className="sr-only">计划生成的交易</caption>
+              <thead><tr><th>代码</th><th>名称</th><th className="num">份额</th><th className="num">价格</th><th className="num">金额</th></tr></thead>
+              <tbody>
+                {transactions.map((t) => (
+                  <tr key={t.id}><td className="mono">{t.ticker}</td><td>{t.symbolName}</td><td className="num">{t.quantityMicros / 1e6}</td><td className="num">{formatMoney(t.priceMicros, currency)}</td><td className="num">{formatMoney(Math.round((t.quantityMicros * t.priceMicros) / 1e6), currency)}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      )}
       {plan.status === 'abandoned' && <Alert>放弃于 {plan.abandonedAt?.slice(0, 16).replace('T', ' ')}（UTC）。</Alert>}
 
       {confirm && (

@@ -56,7 +56,7 @@ export default function Targets({ state, refresh }) {
       {!valid && <Alert>目标合计必须正好 100.00%，当前是 {sum.toFixed(2)}%。改到 100% 才能保存。</Alert>}
       {error && <Alert tone="danger">{error}</Alert>}
       {state.sleeves.length === 0 ? <Empty title="还没有分类。" action={<Button onClick={add}>新增分类</Button>} /> : (
-        <table className="table">
+        <table className="table table--fixed">
           <caption className="sr-only">分类目标</caption>
           <thead><tr><th>分类名</th><th className="num">目标 %</th><th className="num">偏离带 %</th><th className="num is-secondary">当前市值</th><th className="num is-secondary">当前比例</th><th /></tr></thead>
           <tbody>

@@ -72,15 +72,15 @@ export default function Holdings({ state, refresh, navigate }) {
         {state.symbols.length === 0 ? <Empty title="还没有代码。" action={<Button variant="primary" onClick={openCode}>新增代码</Button>}>先添加你要买的 ETF 或股票。</Empty> : (
           <table className="table">
             <caption className="sr-only">代码与价格</caption>
-            <thead><tr><th>代码</th><th>名称</th><th>分类</th><th className="num">每手份数</th><th className="num">现价</th><th>价格日期</th><th>状态</th><th /></tr></thead>
+            <thead><tr><th>代码</th><th className="is-secondary">名称</th><th className="is-secondary">分类</th><th className="num is-secondary">每手份数</th><th className="num">现价</th><th className="is-secondary">价格日期</th><th className="is-secondary">状态</th><th /></tr></thead>
             <tbody>
               {state.symbols.map((symbol) => (
                 <tr key={symbol.id} className={symbol.archived ? 'is-muted' : ''}>
-                  <td className="mono">{symbol.ticker}</td><td>{symbol.name}</td><td>{symbol.sleeveName}</td>
-                  <td className="num">{symbol.lotSizeMicros / 1e6}</td>
+                  <td className="mono">{symbol.ticker}</td><td className="is-secondary">{symbol.name}</td><td className="is-secondary">{symbol.sleeveName}</td>
+                  <td className="num is-secondary">{symbol.lotSizeMicros / 1e6}</td>
                   <td className="num">{symbol.priceMicros ? formatPrice(symbol.priceMicros) : '—'}</td>
-                  <td>{symbol.priceAsOf ?? '—'}</td>
-                  <td><Tag tone={symbol.archived ? 'danger' : 'default'}>{symbol.archived ? '已归档' : '在用'}</Tag></td>
+                  <td className="is-secondary">{symbol.priceAsOf ?? '—'}</td>
+                  <td className="is-secondary"><Tag tone={symbol.archived ? 'danger' : 'default'}>{symbol.archived ? '已归档' : '在用'}</Tag></td>
                   <td className="row-actions">
                     <Button size="small" onClick={() => openPrice(symbol)}>改价格</Button>
                     <Button size="small" variant="ghost" onClick={() => run(async () => api(`/api/symbols/${symbol.id}`, { method: 'PATCH', body: { archived: !symbol.archived } }))}>{symbol.archived ? '恢复' : '归档'}</Button>
@@ -97,11 +97,11 @@ export default function Holdings({ state, refresh, navigate }) {
         {state.positions.length === 0 ? <Empty title="还没有持仓。" action={<Button variant="primary" onClick={() => (activeSymbols.length ? openTrade() : openCode())}>{activeSymbols.length ? '新增买入' : '新增代码'}</Button>}>新增一笔买入后，这里会按账户显示。</Empty> : (
           <table className="table">
             <caption className="sr-only">持仓</caption>
-            <thead><tr><th>账户</th><th>代码</th><th>名称</th><th>分类</th><th className="num">份额</th><th className="num is-secondary">平均成本</th><th className="num">现价</th><th className="is-secondary">价格日期</th><th className="num">市值</th><th className="num is-secondary">未实现盈亏</th></tr></thead>
+            <thead><tr><th className="is-secondary">账户</th><th>代码</th><th className="is-secondary">名称</th><th className="is-secondary">分类</th><th className="num">份额</th><th className="num is-secondary">平均成本</th><th className="num">现价</th><th className="is-secondary">价格日期</th><th className="num">市值</th><th className="num is-secondary">未实现盈亏</th></tr></thead>
             <tbody>
               {state.positions.map((p) => (
                 <tr key={`${p.accountId}-${p.symbolId}`}>
-                  <td>{p.accountName}</td><td className="mono">{p.ticker}</td><td>{p.name}</td><td>{p.sleeveName}</td>
+                  <td className="is-secondary">{p.accountName}</td><td className="mono">{p.ticker}</td><td className="is-secondary">{p.name}</td><td className="is-secondary">{p.sleeveName}</td>
                   <td className="num">{p.quantityMicros / 1e6}</td><td className="num is-secondary">{formatPrice(p.avgCostMicros)}</td>
                   <td className="num">{formatPrice(p.priceMicros)}</td><td className="is-secondary">{p.priceAsOf ?? '—'}</td>
                   <td className="num">{formatMoney(p.marketValueMicros, currency)}</td><td className="num is-secondary">{formatMoney(p.unrealizedMicros, currency)}</td>

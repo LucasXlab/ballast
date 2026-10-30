@@ -80,6 +80,8 @@ try {
     await page.screenshot({ path: path.join(outDir, `${name}-375.png`), fullPage: true });
     const width = await page.evaluate(() => document.documentElement.scrollWidth);
     if (width > 375) problems.push(`${name}-375 横向滚动 ${width}px`);
+    const wideTables = await page.evaluate(() => [...document.querySelectorAll('table')].filter((table) => table.getBoundingClientRect().right > 376).length);
+    if (wideTables > 0) problems.push(`${name}-375 有 ${wideTables} 个表格超出视口`);
   }
   await context.close();
   if (problems.length) throw new Error(problems.join('\n'));

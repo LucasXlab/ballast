@@ -67,6 +67,24 @@ function symbolKey(s) {
   return `${s.ticker}\u0000${s.id}`;
 }
 
+function splitByValueExact(budget, eligible, valueById, sleeveValue) {
+  const n = BigInt(eligible.length);
+  if (sleeveValue <= 0n) {
+    const base = budget / n;
+    const remainder = budget - base * n;
+    return eligible.map((symbol, index) => base + (BigInt(index) < remainder ? 1n : 0n));
+  }
+  const raw = eligible.map((symbol) => (budget * (valueById.get(symbol.id) ?? 0n)) / sleeveValue);
+  let assigned = raw.reduce((a, b) => a + b, 0n);
+  let remainder = budget - assigned;
+  const out = [...raw];
+  for (let i = 0; i < out.length && remainder > 0n; i += 1) {
+    out[i] += 1n;
+    remainder -= 1n;
+  }
+  return out;
+}
+
 export function buildPlan({ positions, symbols, sleeves, amountMicros, minTradeMicros = 0, nowMs = Date.now() }) {
   if (!Number.isInteger(amountMicros) || amountMicros < 1 || amountMicros > 1_000_000_000_000) {
     throw new PlanError(400, 'invalid_input', '投入金额必须在 0.000001–1,000,000 之间');
@@ -149,11 +167,7 @@ export function buildPlan({ positions, symbols, sleeves, amountMicros, minTradeM
       .filter((s) => s.sleeveId === sleeve.id && s.priceMicros > 0)
       .sort((a, b) => symbolKey(a).localeCompare(symbolKey(b), 'zh-CN'));
     if (eligible.length === 0) continue;
-    const weights = eligible.map((s) => {
-      if (sleeveValue > 0n) return safeNumber((budget * (valueById.get(s.id) ?? 0n)) / sleeveValue);
-      return 1;
-    });
-    const symbolBudgets = splitBudget(safeNumber(budget), weights).map(BigInt);
+    const symbolBudgets = splitByValueExact(budget, eligible, valueById, sleeveValue);
     for (let j = 0; j < eligible.length; j += 1) {
       const symbol = eligible[j];
       const unit = (BigInt(symbol.lotSizeMicros) * BigInt(symbol.priceMicros)) / 1_000_000n;

@@ -435,7 +435,7 @@ export function createApp({ config, now = Date.now, staticDir = null, dbHandle =
   app.get('/api/transactions', asyncRoute((req, res) => {
     ensureSetup(db);
     const { limit, offset } = pagination(req.query, 50, 200);
-    const all = getTransactions(db, { accountId: req.query.accountId || null, symbolId: req.query.symbolId || null });
+    const all = getTransactions(db, { accountId: req.query.accountId || null, symbolId: req.query.symbolId || null, planId: req.query.planId || null });
     res.json({ total: all.length, items: all.slice(offset, offset + limit).map(transactionDto) });
   }));
 
@@ -640,6 +640,10 @@ export function createApp({ config, now = Date.now, staticDir = null, dbHandle =
     ensureSetup(db);
     const plan = planFull(db, req.params.id);
     if (!plan) throw new ApiError(404, 'not_found', '计划不存在');
+    if (plan.status === 'draft') {
+      const row = db.prepare('SELECT * FROM plan WHERE id = ?').get(plan.id);
+      plan.stale = currentHash(db, row) !== row.inputs_hash;
+    }
     res.json(plan);
   }));
 

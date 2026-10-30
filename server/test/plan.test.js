@@ -66,3 +66,15 @@ test('直接 hash 输入的规范化顺序无关', () => {
   const h2 = hashPlanInputs({ amountMicros: 1, minTradeMicros: 0, positions: new Map([['a', 1], ['b', 2]]), symbols: [...symbols].reverse(), sleeves: [...sleeves].reverse() });
   assert.equal(h1, h2);
 });
+
+test('分类内按市值比例先取整，余数按 ticker 升序逐微补', () => {
+  const sleeves = [{ id: 's', name: '单一', targetBp: 10000, bandBp: 500, sortOrder: 0 }];
+  const symbols = [
+    { id: 'b', ticker: 'BBB', name: 'B', sleeveId: 's', priceMicros: 1, priceAsOf: '2026-10-28', lotSizeMicros: 1000000, archived: false },
+    { id: 'a', ticker: 'AAA', name: 'A', sleeveId: 's', priceMicros: 1, priceAsOf: '2026-10-28', lotSizeMicros: 1000000, archived: false },
+  ];
+  const positions = [{ symbolId: 'a', quantityMicros: 1000000 }, { symbolId: 'b', quantityMicros: 3000000 }];
+  const plan = buildPlan({ positions, symbols, sleeves, amountMicros: 10, minTradeMicros: 0, nowMs: Date.parse('2026-10-29T12:00:00Z') });
+  const byTicker = Object.fromEntries(plan.items.map((i) => [i.ticker, i.amountMicros]));
+  assert.deepEqual(byTicker, { AAA: 3, BBB: 7 });
+});

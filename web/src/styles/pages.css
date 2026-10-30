@@ -17,6 +17,9 @@
 .metric { font-size: var(--fs-20); line-height: var(--lh-20); font-weight: 600; margin-top: var(--space-1); }
 
 .table { width: 100%; border-collapse: collapse; margin-top: var(--space-2); }
+.table--fixed { table-layout: fixed; }
+.table--fixed th, .table--fixed td { overflow: hidden; }
+.table--fixed .input--compact { width: 100%; min-width: 0; }
 .table th { text-align: left; font-size: var(--fs-12); line-height: var(--lh-12); font-weight: 500; color: var(--text-muted); padding: var(--space-2) var(--space-2); border-bottom: 1px solid var(--border); white-space: nowrap; }
 .table td { padding: var(--space-3) var(--space-2); border-bottom: 1px solid var(--border); vertical-align: middle; }
 .table tbody tr:hover { background: var(--bg-subtle); }

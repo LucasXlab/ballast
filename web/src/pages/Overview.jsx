@@ -93,13 +93,13 @@ export default function Overview({ state, refresh, navigate }) {
         {!state.lastPlan ? <Empty title="还没有计划。">输入投入金额，生成第一份买入计划。</Empty> : (
           <table className="table">
             <caption className="sr-only">最近计划</caption>
-            <thead><tr><th>时间</th><th>投入</th><th>计划买入</th><th>剩余现金</th><th>状态</th><th /></tr></thead>
+            <thead><tr><th>时间</th><th>投入</th><th className="is-secondary">计划买入</th><th className="is-secondary">剩余现金</th><th>状态</th><th /></tr></thead>
             <tbody>
               <tr>
                 <td>{state.lastPlan.createdAt.slice(0, 10)}</td>
                 <td className="num">{formatMoney(state.lastPlan.amountMicros, currency)}</td>
-                <td className="num">{formatMoney(state.lastPlan.plannedMicros, currency)}</td>
-                <td className="num">{formatMoney(state.lastPlan.cashLeftMicros, currency)}</td>
+                <td className="num is-secondary">{formatMoney(state.lastPlan.plannedMicros, currency)}</td>
+                <td className="num is-secondary">{formatMoney(state.lastPlan.cashLeftMicros, currency)}</td>
                 <td><Tag tone={state.lastPlan.status === 'executed' ? 'ok' : state.lastPlan.status === 'abandoned' ? 'danger' : 'warn'}>{state.lastPlan.status === 'executed' ? '已执行' : state.lastPlan.status === 'abandoned' ? '已放弃' : '草稿'}</Tag></td>
                 <td><Button size="small" onClick={() => navigate(`/plans/${state.lastPlan.id}`)}>查看</Button></td>
               </tr>

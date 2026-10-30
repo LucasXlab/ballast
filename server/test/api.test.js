@@ -56,9 +56,13 @@ test('计划生成、执行、幂等与过期', async () => {
     assert.equal(again.status, 409);
     assert.equal(again.json.code, 'plan_not_draft');
     const plan2 = await ctx.request('/api/plans', { method: 'POST', body: { amountMicros: 1000000000 } });
+    const before = await ctx.request(`/api/plans/${plan2.json.id}`);
+    assert.equal(before.json.stale, false);
     await ctx.request('/api/prices', { method: 'PUT', body: { prices: [{ symbolId: symbols['510300'].id, priceMicros: 4100000, priceAsOf: '2026-10-29' }] } });
     const stale = await ctx.request(`/api/plans/${plan2.json.id}/execute`, { method: 'POST', body: { accountId: account.id, tradedAt: '2026-10-29' } });
     assert.equal(stale.status, 409);
     assert.equal(stale.json.code, 'plan_stale');
+    const detail = await ctx.request(`/api/plans/${plan2.json.id}`);
+    assert.equal(detail.json.stale, true);
   } finally { await ctx.close(); }
 });
